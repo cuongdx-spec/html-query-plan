@@ -56,7 +56,7 @@ function onMouseover(node: Element, createTooltip: (e: Element) => HTMLElement) 
 
 function onMouseout(node: Element, event: MouseEvent) {
     // http://stackoverflow.com/questions/4697758/prevent-onmouseout-when-hovering-child-element-of-the-parent-absolute-div-withou
-    let e = event.toElement || event.relatedTarget as Element;
+    let e = (event as MouseEvent & { toElement?: Element }).toElement || event.relatedTarget as Element;
     // If the element currently under the mouse is still the node, don't hide the tooltip
     if (e == node || e == currentTooltip) return;
     // If the mouse hovers over child elements (e.g. the text in the tooltip or the text / icons in the node) then a mouseoout
