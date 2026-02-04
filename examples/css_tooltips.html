@@ -2,29 +2,113 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Example for html-query-plan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Tooltips - Query Plan Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" type="text/css" href="../css/qp.css" />
     <script src="../dist/qp.js"></script>
 </head>
-<body>
-    <p>Example of CSS Tooltips.</p>
-    <p>
-        <input type="file" id="upload">
-    </p>
-    <div id="container"></div>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-12">
+        <div class="bg-white rounded-lg shadow-lg p-8 border border-slate-200 mb-8">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900">CSS Tooltips Demo</h1>
+                    <p class="text-slate-600 mt-2">Using CSS-based tooltips for query plan visualization (no JavaScript tooltips)</p>
+                </div>
+                <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" />
+                    </svg>
+                    CSS Tooltips
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-8 border border-slate-200">
+            <label class="block mb-6">
+                <div class="text-sm font-semibold text-slate-700 mb-3">Select Query Plan File</div>
+                <div class="border-2 border-dashed border-blue-400 rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer bg-slate-50">
+                    <input type="file" id="upload" class="hidden" accept=".sqlplan,.xml">
+                    <svg class="w-10 h-10 mx-auto text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="font-medium text-slate-900">Click or drag to upload</p>
+                </div>
+            </label>
+
+            <div id="container" class="bg-slate-50 rounded-lg p-6 border border-slate-200 overflow-auto" style="min-height: 600px;">
+                <div class="flex items-center justify-center h-full text-slate-400">
+                    <p class="text-center">
+                        <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span>Upload a file - hover over plan operations to see details</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                <h3 class="font-bold text-blue-900 mb-2">💡 Tip</h3>
+                <p class="text-blue-800 text-sm">Hover over any operation in the query plan to see CSS-based tooltips with detailed information.</p>
+            </div>
+            <div class="bg-slate-100 rounded-lg p-6 border border-slate-300">
+                <h3 class="font-bold text-slate-900 mb-2">⚙️ Configuration</h3>
+                <p class="text-slate-700 text-sm">This demo uses <code class="bg-white px-1 rounded">jsTooltips: false</code> to enable CSS-only tooltips.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.getElementById('upload').addEventListener('change', function (e) {
             var file = e.target.files[0];
             var reader = new FileReader();
+            
             reader.onload = function (e) {
-                QP.showPlan(document.getElementById("container"), e.target.result, {
-                    jsTooltips: false
-                });
+                try {
+                    QP.showPlan(document.getElementById("container"), e.target.result, {
+                        jsTooltips: false
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error parsing file: ' + error.message);
+                }
             }
+            
             reader.onerror = function (e) {
-                alert('error reading file');
+                alert('Error reading file');
             }
+            
             reader.readAsText(file, "UTF-8");
+        });
+
+        // Drag and drop support
+        const dropZone = document.querySelector('[class*="border-dashed"]');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('bg-blue-50', 'border-blue-500');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('bg-blue-50', 'border-blue-500');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            document.getElementById('upload').files = e.dataTransfer.files;
+            const event = new Event('change', { bubbles: true });
+            document.getElementById('upload').dispatchEvent(event);
         });
     </script>
 </body>

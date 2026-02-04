@@ -2,27 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Example for html-query-plan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX Loading - Query Plan Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" type="text/css" href="../css/qp.css" />
     <script src="../dist/qp.js"></script>
 </head>
-<body>
-    <div id="container"></div>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-12">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-8 border border-slate-200 mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">AJAX Loading Demo</h1>
+            <p class="text-slate-600 mt-2">Dynamically loading query plan files via AJAX</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="bg-white rounded-lg shadow-lg p-8 border border-slate-200">
+            <div class="flex items-center justify-center">
+                <div class="animate-spin mr-3">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </div>
+                <p class="text-slate-700 font-medium">Loading query plan...</p>
+            </div>
+        </div>
+
+        <!-- Container -->
+        <div id="container" class="bg-white rounded-lg shadow-lg p-8 border border-slate-200 mt-8 hidden overflow-auto" style="min-height: 600px;"></div>
+
+        <!-- Error State -->
+        <div id="errorState" class="bg-white rounded-lg shadow-lg p-8 border border-slate-200 mt-8 hidden">
+            <div class="flex items-start">
+                <svg class="w-6 h-6 text-red-500 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                <div>
+                    <h3 class="text-lg font-bold text-red-900">Error Loading Plan</h3>
+                    <p id="errorMessage" class="text-red-700 mt-1">Unable to load the query plan file</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="mt-8 bg-blue-50 rounded-lg p-6 border border-blue-200">
+            <h3 class="font-bold text-blue-900 mb-2">📌 About This Demo</h3>
+            <p class="text-blue-800 text-sm">This page automatically loads a sample query plan using AJAX. No user interaction required - perfect for embedding plans in applications.</p>
+        </div>
+    </div>
+
     <script type="text/javascript">
-        var xmlhttp = new XMLHttpRequest();
+        const container = document.getElementById("container");
+        const loadingState = document.getElementById("loadingState");
+        const errorState = document.getElementById("errorState");
+        const errorMessage = document.getElementById("errorMessage");
 
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == 4 /* DONE */ ) {
-                if (xmlhttp.status == 200) {
-                    QP.showPlan(document.getElementById("container"), xmlhttp.responseText);
-                } else {
-                    alert('Problem downloading query plan');
+        function loadPlan(planUrl) {
+            const xmlhttp = new XMLHttpRequest();
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 /* DONE */) {
+                    loadingState.classList.add('hidden');
+                    
+                    if (xmlhttp.status == 200) {
+                        try {
+                            QP.showPlan(container, xmlhttp.responseText);
+                            container.classList.remove('hidden');
+                        } catch (error) {
+                            errorState.classList.remove('hidden');
+                            errorMessage.textContent = 'Error parsing plan: ' + error.message;
+                            console.error('Parse error:', error);
+                        }
+                    } else {
+                        errorState.classList.remove('hidden');
+                        errorMessage.textContent = 'Failed to download query plan (HTTP ' + xmlhttp.status + ')';
+                    }
                 }
-            }
-        };
+            };
 
-        xmlhttp.open("GET", "../test_plans/clustered index delete.sqlplan");
-        xmlhttp.send();
+            xmlhttp.onerror = function() {
+                loadingState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                errorMessage.textContent = 'Network error while loading query plan';
+            };
+
+            xmlhttp.open("GET", planUrl);
+            xmlhttp.send();
+        }
+
+        // Load the plan on page load
+        loadPlan("../test_plans/clustered index delete.sqlplan");
     </script>
 </body>
 </html>

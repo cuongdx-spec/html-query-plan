@@ -2,26 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Example for html-query-plan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload - Query Plan Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" type="text/css" href="../css/qp.css" />
     <script src="../dist/qp.js"></script>
 </head>
-<body>
-    <p>
-        <input type="file" id="upload">
-    </p>
-    <div id="container"></div>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-12">
+        <div class="bg-white rounded-lg shadow-lg p-8 border border-slate-200">
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">Upload Query Plan</h1>
+            <p class="text-slate-600 mb-8">Select a SQL Server execution plan file (.sqlplan or .xml) to visualize</p>
+            
+            <div class="mb-6">
+                <label class="block cursor-pointer">
+                    <div class="border-2 border-dashed border-blue-400 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors bg-slate-50">
+                        <input type="file" id="upload" class="hidden" accept=".sqlplan,.xml">
+                        <svg class="w-12 h-12 mx-auto text-blue-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-lg font-semibold text-slate-900">Click to upload or drag and drop</p>
+                        <p class="text-sm text-slate-600 mt-1">SQLPlan or XML files</p>
+                    </div>
+                </label>
+            </div>
+
+            <div id="status" class="hidden mb-6 p-4 rounded-lg border"></div>
+
+            <div id="container" class="bg-slate-50 rounded-lg p-6 border border-slate-200 overflow-auto" style="min-height: 500px;">
+                <div class="flex items-center justify-center h-full text-slate-400">
+                    <p class="text-center">
+                        <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span>Upload a file to visualize the execution plan</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        document.getElementById('upload').addEventListener('change', function (e) {
-            var file = e.target.files[0];
-            var reader = new FileReader();
+        const uploadInput = document.getElementById('upload');
+        const container = document.getElementById('container');
+        const statusDiv = document.getElementById('status');
+
+        uploadInput.addEventListener('change', handleFile);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            
             reader.onload = function (e) {
-                QP.showPlan(document.getElementById("container"), e.target.result);
-            }
+                try {
+                    QP.showPlan(container, e.target.result);
+                    showStatus('✓ File loaded successfully: ' + file.name, 'success');
+                } catch (error) {
+                    showStatus('✗ Error parsing file', 'error');
+                    console.error(error);
+                }
+            };
+            
             reader.onerror = function (e) {
-                alert('error reading file');
-            }
+                showStatus('✗ Error reading file', 'error');
+            };
+            
             reader.readAsText(file, "UTF-8");
+        }
+
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.classList.remove('hidden');
+            statusDiv.className = 'p-4 rounded-lg border ' + (type === 'success' 
+                ? 'bg-green-50 border-green-200 text-green-800' 
+                : 'bg-red-50 border-red-200 text-red-800');
+        }
+
+        // Drag and drop
+        const dropZone = document.querySelector('[class*="border-dashed"]').parentElement;
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('bg-blue-50', 'border-blue-500');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('bg-blue-50', 'border-blue-500');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            uploadInput.files = e.dataTransfer.files;
+            const event = new Event('change', { bubbles: true });
+            uploadInput.dispatchEvent(event);
         });
     </script>
 </body>

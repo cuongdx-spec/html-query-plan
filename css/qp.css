@@ -1,8 +1,10 @@
-﻿div.qp-node {
-    background-color: #FFFFCC;
+div.qp-node {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
     margin: 2px;
     padding: 2px;
-    border: 1px solid black;
+    border: 1px solid #d1d5f0;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(71, 85, 168, 0.1);
 }
 
 div.qp-node,
@@ -12,10 +14,13 @@ div.qp-tt {
 }
 
 .qp-statement-header {
-    border-color: black;
+    border-color: #4755a8;
     border-style: solid;
-    border-width: 1px 0px 1px 0px;
-    padding: 0.3em;
+    border-width: 2px 0px 2px 0px;
+    padding: 0.8em;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+    color: #1e293b;
+    font-weight: 600;
 }
 
 .qp-statement-header-row {
@@ -56,10 +61,13 @@ div[class|='qp-icon'] {
 .qp-tt {
     top: 4em;
     left: 2em;
-    border: 1px solid black;
-    background-color: #FFFFEE;
-    padding: 2px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    padding: 12px;
     width: 30em;
+    border-radius: 6px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .qp-tt div,
